@@ -1,0 +1,32 @@
+#include "stm32f4xx.h"
+#include "stm32f4xx_gpio.h"
+#include "stm32f4xx_rcc.h"
+
+
+void Delay(long x)
+{
+	while(x>0)
+		x--;
+}
+
+int main(void)
+{
+ RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD,ENABLE);
+
+ GPIO_InitTypeDef Obj1;
+ Obj1.GPIO_Pin= (GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15);
+ Obj1.GPIO_Mode=GPIO_Mode_OUT ;
+ Obj1.GPIO_Speed=GPIO_Speed_100MHz;
+ Obj1.GPIO_OType=GPIO_OType_PP;
+ Obj1.GPIO_PuPd=GPIO_PuPd_NOPULL;
+
+ GPIO_Init(GPIOD,&Obj1);
+
+    while(1)
+    {
+         GPIO_ToggleBits(GPIOD,(GPIO_Pin_12|GPIO_Pin_14));
+       Delay(120000);
+          GPIO_ToggleBits(GPIOD,(GPIO_Pin_13|GPIO_Pin_15));
+       Delay(120000);
+    }
+}
