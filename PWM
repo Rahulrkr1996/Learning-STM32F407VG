@@ -1,0 +1,107 @@
+#include <stm32f4xx.h>
+#include <stm32f4xx_rcc.h>
+#include <stm32f4xx_tim.h>
+#include <stm32f4xx_gpio.h>
+
+#define Servo_0 0.6
+#define Servo_90 1.5
+#define Servo_180 2.40
+
+
+//Timer init Objects
+
+TIM_TimeBaseInitTypeDef  TIM_TBInit_Obj;
+TIM_OCInitTypeDef  TIM_OCInit_Obj;
+GPIO_InitTypeDef GPIO_Init_Obj;
+
+void GPIO_init()
+{
+	 GPIO_InitTypeDef Obj1;
+	 Obj1.GPIO_Pin= (GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15);
+	 Obj1.GPIO_Mode=GPIO_Mode_AF ;
+	 Obj1.GPIO_Speed=GPIO_Speed_100MHz;
+	 Obj1.GPIO_OType=GPIO_OType_PP;
+	 Obj1.GPIO_PuPd=GPIO_PuPd_UP;
+
+	 GPIO_PinAFConfig(GPIOD,GPIO_PinSource13,GPIO_AF_TIM4);
+	 GPIO_PinAFConfig(GPIOD,GPIO_PinSource14,GPIO_AF_TIM4);
+	 GPIO_Init(GPIOD,&Obj1);
+}
+
+void TIM_Base_Config(TIM_TimeBaseInitTypeDef TIM_TBInit_Obj)
+{
+	TIM_TBInit_Obj.TIM_Period =19999;
+	TIM_TBInit_Obj.TIM_Prescaler = 84;
+	TIM_TBInit_Obj.TIM_ClockDivision = 0;
+	TIM_TBInit_Obj.TIM_CounterMode = TIM_CounterMode_Up;
+
+	TIM_TimeBaseInit(TIM4, &TIM_TBInit_Obj);
+}
+
+void TIM_OC_Config(TIM_OCInitTypeDef TIM_OCInit_Obj)
+{
+	TIM_OCInit_Obj.TIM_OCMode= TIM_OCMode_PWM1 ; //PWM1 for Set on Comp. Match
+	TIM_OCInit_Obj.TIM_OutputState=TIM_OutputState_Enable;
+	TIM_OCInit_Obj.TIM_Pulse= 0 ; //Initial Dty Cycle
+	TIM_OCInit_Obj.TIM_OCPolarity=TIM_OCPolarity_High;
+
+	TIM_OC2Init(TIM4,&TIM_OCInit_Obj);
+	TIM_OC2PreloadConfig(TIM4,TIM_OCPreload_Enable);
+
+	TIM_OC3Init(TIM4,&TIM_OCInit_Obj);
+    TIM_OC3PreloadConfig(TIM4,TIM_OCPreload_Enable);
+
+
+	TIM_ARRPreloadConfig(TIM4,ENABLE) ;
+
+	//Start timer
+	TIM_Cmd(TIM4,ENABLE);
+}
+
+float ticks(int angle)
+{
+ float time=(Servo_0)+((Servo_180-Servo_90)/90*angle) ;
+ float tick=time*1000;
+
+ return tick;
+}
+
+void Delay(int x)
+{
+  while(x>0)
+	  x--;
+}
+
+int main(void)
+{
+
+int i;
+
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4,ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD,ENABLE);
+
+TIM_Base_Config(TIM_TBInit_Obj)	;
+TIM_OC_Config(TIM_OCInit_Obj);
+GPIO_init();
+
+	while(1)
+    {
+//		TIM4->CCR2=0; //600 ticks correspond to 0.6 ms
+//		TIM4->CCR3=0; //600 ticks correspond to 0.6 ms
+
+		/////
+
+		for(i=0;i<19999;i=i+500)
+		 {TIM4->CCR2=i;//ticks(i);
+		  TIM4->CCR3=i;//ticks(i);
+		//  Delay(120000);
+		 }
+/*
+		GPIO_ToggleBits(GPIOD,(GPIO_Pin_12|GPIO_Pin_14));
+		       Delay(12000);
+		          GPIO_ToggleBits(GPIOD,(GPIO_Pin_13|GPIO_Pin_15));
+		       Delay(12000);
+*/
+    }
+}
+
